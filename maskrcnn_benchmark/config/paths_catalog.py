@@ -7,6 +7,18 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = "datasets"
     DATASETS = {
+        "visdrone_2018_train": {
+            "img_dir": "visdrone/train_images",
+            "ann_file": "visdrone/annotations/visdrone_2018_det_train.json"
+        },
+        "visdrone_2018_val": {
+            "img_dir": "visdrone/val_images",
+            "ann_file": "visdrone/annotations/visdrone_2018_det_val.json"
+        },
+        "visdrone_2018_val_debug_one": {
+            "img_dir": "visdrone/val_images",
+            "ann_file": "visdrone/annotations/visdrone_2018_det_val_debug_one.json"
+        },
         "coco_2017_train": {
             "img_dir": "coco/train2017",
             "ann_file": "coco/annotations/instances_train2017.json"
@@ -128,6 +140,17 @@ class DatasetCatalog(object):
             )
             return dict(
                 factory="PascalVOCDataset",
+                args=args,
+            )
+        elif "visdrone" in name:
+            data_dir = DatasetCatalog.DATA_DIR
+            attrs = DatasetCatalog.DATASETS[name]
+            args = dict(
+                root=os.path.join(data_dir, attrs["img_dir"]),
+                ann_file=os.path.join(data_dir, attrs["ann_file"]),
+            )
+            return dict(
+                factory="COCODataset", # I guess just use COCO will works
                 args=args,
             )
         raise RuntimeError("Dataset not available: {}".format(name))

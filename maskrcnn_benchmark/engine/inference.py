@@ -21,6 +21,20 @@ def compute_on_dataset(model, data_loader, device, timer=None):
     cpu_device = torch.device("cpu")
     for _, batch in enumerate(tqdm(data_loader)):
         images, targets, image_ids = batch
+        
+        #[LY] failed to change color channels
+        #print("\ndebug in {}".format(__file__))
+        #_debug_path = "/home/luoyi/mrb/pers/code/anchor_setting"
+        #_im_file = os.path.join(_debug_path,'0527.jpg')
+        #import cv2
+        #img = images.tensors[0].mul(255).byte()
+        #img = img.cpu().numpy().transpose((1, 2, 0))
+        ##img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        #cv2.imwrite(_im_file,img)
+        #print('save success {}'.format(_im_file))
+
+        
+        images = images.to(device)
         with torch.no_grad():
             if timer:
                 timer.tic()

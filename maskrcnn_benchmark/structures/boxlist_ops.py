@@ -82,8 +82,11 @@ def boxlist_iou(boxlist1, boxlist2):
 
     TO_REMOVE = 1
 
-    wh = (rb - lt + TO_REMOVE).clamp(min=0)  # [N,M,2]
-    inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
+    #[LY] modify as FS (issue18) to reduce the memory
+    #wh = (rb - lt + TO_REMOVE).clamp(min=0)  # [N,M,2]
+    #inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
+    wh = rb.add_(lt.mul_(-1)).add_(TO_REMOVE).clamp_(min=0)
+    inter = wh[:, :, 0].mul_(wh[:, :, 1])
 
     iou = inter / (area1[:, None] + area2 - inter)
     return iou

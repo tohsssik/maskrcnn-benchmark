@@ -98,12 +98,50 @@ class RPNPostProcessor(torch.nn.Module):
         box_regression = box_regression[batch_idx, topk_idx]
 
         image_shapes = [box.size for box in anchors]
+        # shape after concat (211400,4)
         concat_anchors = torch.cat([a.bbox for a in anchors], dim=0)
+        # shape after reshape (1,1000,4); [b,t].shape = [(1,1),(1,1000)]
         concat_anchors = concat_anchors.reshape(N, -1, 4)[batch_idx, topk_idx]
-
+        
+        # anchor box regress to proposal here
         proposals = self.box_coder.decode(
             box_regression.view(-1, 4), concat_anchors.view(-1, 4)
         )
+
+        #[LY] dont regress
+        #print('\ndebug in {}'.format(__file__))
+        #_debug_path = "/home/luoyi/mrb/pers/code/anchor_setting"
+        #import os 
+        #_output_file = os.path.join(_debug_path,'0527_{}x{}.jpg'.format(H,W))
+        #import numpy as np 
+        #import cv2
+        #_im = np.zeros((H,W,1),dtype=np.uint8)
+        #_im.fill(0)
+        #proposals = concat_anchors.view(N,-1,4)
+        #_pro = proposals[0].tolist()
+        #_obj = objectness[0].tolist()
+        #_w,_h = image_shapes[0]
+        #for i in range(len(_pro)):
+        #    try:
+        #        cx = int((_pro[i][0] + _pro[i][2])*W/(_w*2))
+        #        cy = int((_pro[i][1] + _pro[i][3])*H/(_h*2))
+        #        if _im[cy][cx] == 0:
+        #            _im[cy][cx] = int(_obj[i]*255)
+        #    except:
+        #        continue
+        #_im = cv2.resize(_im,(_w,_h))
+        #cv2.imwrite(_output_file,_im)   
+        #    
+        #print(len(_pro))
+        #print(len(_obj))
+        #print(image_shapes[0])
+        #print(H,W)
+        #print(concat_anchors.shape)
+        #print(proposals.shape)
+        #print(objectness.shape)
+        #print(proposals[:,0,:])
+        #print(objectness[:,0])
+        #[LY]#
 
         proposals = proposals.view(N, -1, 4)
 
@@ -133,6 +171,7 @@ class RPNPostProcessor(torch.nn.Module):
             boxlists (list[BoxList]): the post-processed anchors, after
                 applying box decoding and NMS
         """
+
         sampled_boxes = []
         num_levels = len(objectness)
         anchors = list(zip(*anchors))
@@ -148,7 +187,7 @@ class RPNPostProcessor(torch.nn.Module):
         # append ground-truth bboxes to proposals
         if self.training and targets is not None:
             boxlists = self.add_gt_proposals(boxlists, targets)
-
+        
         return boxlists
 
     def select_over_all_levels(self, boxlists):
