@@ -15,6 +15,10 @@ class DatasetCatalog(object):
             "img_dir": "visdrone/val_images",
             "ann_file": "visdrone/annotations/visdrone_2018_det_val.json"
         },
+        "visdrone_2018_val_debug_one": {
+            "img_dir": "visdrone/val_images",
+            "ann_file": "visdrone/annotations/visdrone_2018_det_val_debug_one.json"
+        },
         "coco_2017_train": {
             "img_dir": "coco/train2017",
             "ann_file": "coco/annotations/instances_train2017.json"

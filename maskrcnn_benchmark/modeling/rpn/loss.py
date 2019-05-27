@@ -56,6 +56,7 @@ class RPNLossComputation(object):
     def prepare_targets(self, anchors, targets):
         labels = []
         regression_targets = []
+
         for anchors_per_image, targets_per_image in zip(anchors, targets):
             matched_targets = self.match_targets_to_anchors(
                 anchors_per_image, targets_per_image, self.copied_fields
