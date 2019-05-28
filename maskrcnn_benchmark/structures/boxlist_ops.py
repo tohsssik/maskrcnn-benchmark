@@ -64,6 +64,13 @@ def boxlist_iou(boxlist1, boxlist2):
     Reference:
       https://github.com/chainer/chainercv/blob/master/chainercv/utils/bbox/bbox_iou.py
     """
+    #[LY]
+    #print('\ndebug at {}'.format(__file__))
+    #_device = boxlist1.bbox.get_device()
+    #_start_mem = torch.cuda.memory_allocated(device=_device)
+    #print('before iou mem(MB): {}'.format(_start_mem/1024/1024)) 
+    
+
     if boxlist1.size != boxlist2.size:
         raise RuntimeError(
                 "boxlists should have same image size, got {}, {}".format(boxlist1, boxlist2))
@@ -71,24 +78,60 @@ def boxlist_iou(boxlist1, boxlist2):
     boxlist2 = boxlist2.convert("xyxy")
     N = len(boxlist1)
     M = len(boxlist2)
-
-    area1 = boxlist1.area()
-    area2 = boxlist2.area()
+    
+    #[LY] try move to half here
+    #area1 = boxlist1.area()
+    #area2 = boxlist2.area()
+    area1 = boxlist1.area().half()
+    area2 = boxlist2.area().half()
 
     box1, box2 = boxlist1.bbox, boxlist2.bbox
+    #[LY] try move to half here
+    #lt = torch.max(box1[:, None, :2], box2[:, :2])  # [N,M,2]
+    #rb = torch.min(box1[:, None, 2:], box2[:, 2:])  # [N,M,2]
+    lt = torch.max(box1[:, None, :2], box2[:, :2]).half()
+    rb = torch.min(box1[:, None, 2:], box2[:, 2:]).half()
+    #print(lt.shape,rb.shape)
 
-    lt = torch.max(box1[:, None, :2], box2[:, :2])  # [N,M,2]
-    rb = torch.min(box1[:, None, 2:], box2[:, 2:])  # [N,M,2]
+
 
     TO_REMOVE = 1
 
     #[LY] modify as FS (issue18) to reduce the memory
     #wh = (rb - lt + TO_REMOVE).clamp(min=0)  # [N,M,2]
     #inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
-    wh = rb.add_(lt.mul_(-1)).add_(TO_REMOVE).clamp_(min=0)
+    #wh = rb.add_(lt.mul_(-1)).add_(TO_REMOVE).clamp_(min=0)
+    
+    wh = rb.sub_(lt).add_(TO_REMOVE).clamp_(min=0)
     inter = wh[:, :, 0].mul_(wh[:, :, 1])
+    #[LY]
+    #print('\ndebug at {}'.format(__file__))
+    #print(type(area1),type(area2),type(inter))
+    #print(area1.shape,area2.shape,inter.shape)
+    #iou = inter / (area1[:, None] + area2 - inter)
+    #iou = inter.div_(area1[:, None].add(area2).add_(inter.mul_(-1)))
 
-    iou = inter / (area1[:, None] + area2 - inter)
+    #[LY]
+    #print('\ndebug at {}'.format(__file__))
+    #_end_mem = torch.cuda.memory_allocated(device=_device)
+    #print('after  iou mem(MB): {}'.format(_end_mem/1024/1024))
+    ##print(lt.shape,rb.shape,wh.shape,inter.shape,iou.shape)
+    ##print('inter and iou shape: {},{}'.format(inter.shape,iou.shape))
+    #_target_tensor = inter
+    #print('tensor.shape: {}'.format(_target_tensor.shape))
+    #print('tensor.dtype: {}'.format(_target_tensor.dtype))
+    #print('tensor.mem_size(MB): {}'.format(
+    #    _target_tensor.element_size()*_target_tensor.nelement()/1024/1024
+    #))
+    #print('mem increased(MB): {}'.format((_end_mem-_start_mem)/1024/1024))
+
+
+    iou = inter/(area1[:, None].add(area2).sub_(inter))
+    #x1 = inter.mul_(-1)
+    #x2 = area1[:,None].add(area2)
+    #x3 = x2.add_(x1)
+    #iou = inter.div_(x3)
+    
     return iou
 
 
