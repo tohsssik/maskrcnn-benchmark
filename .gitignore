@@ -29,7 +29,8 @@ dist/
 .DS_Store
 
 # project dirs
-/datasets
+/datasets/visdrone/train_images
+/datasets/visdrone/val_images
 /models
 /output
 /pers
